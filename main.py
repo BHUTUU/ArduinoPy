@@ -126,7 +126,7 @@ def upload_program():
             print(upload_command)
             uploaded_output=subprocess.check_output(upload_command,shell=True, universal_newlines=True)
             print_to_console(uploaded_output)
-            messagebox.showinfo("Upload", "Program uploaded successfully.")
+            # messagebox.showinfo("Upload", "Program uploaded successfully.")
         else:
             messagebox.showerror("Invalid Board or Port", "Select a valid board and port before upload")
 
