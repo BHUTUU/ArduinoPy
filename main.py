@@ -25,11 +25,7 @@ def getCahce():
     bhutuuImageFile.close()
     arduinoIconFile.close()
     arduinoImageFile.close()
-
 #<<<--- Internal variables--->>>
-# month = datetime.datetime.now().strftime("%B").lower()
-# date = str(datetime.datetime.now().strftime("%d"))
-# CWD = os.getcwd()
 filename = None
 projectpath = None
 alreadySaved = False
@@ -79,8 +75,16 @@ void loop() {
 
 }
 """
-#.............................
+window_focused = True
+# Function to handle window focus events
+def on_focus(event):
+    global window_focused
+    window_focused = True
 
+def on_blur(event):
+    global window_focused
+    window_focused = False
+#...............Functions------------------->>>
 def compile_program():
     global alreadySaved
     global projectpath
@@ -106,8 +110,6 @@ def compile_program():
             messagebox.showerror("Invalid Board", "Select a valid board before compilation")
     else:
         messagebox.showerror("Compilation Failed", "Need to savet the program before compilation.")
-        
-
 def upload_program():
     global silent
     global compiled
@@ -129,8 +131,12 @@ def upload_program():
             # messagebox.showinfo("Upload", "Program uploaded successfully.")
         else:
             messagebox.showerror("Invalid Board or Port", "Select a valid board and port before upload")
-
 def save_program():
+    global window_focused
+    if window_focused:
+        pass
+    else:
+        return
     global silent
     global projectpath
     global filename
@@ -173,10 +179,14 @@ def save_program():
                 projectpath = project_directory
                 alreadySaved = True
 def open_project():
+    global window_focused
+    if window_focused:
+        pass
+    else:
+        return
     global projectpath
     global filename
     global alreadySaved
-
     file_path = askopenfilename(filetypes=[("Arduino Program", "*.ino")])
     if file_path:
         with open(file_path, "r") as file:
@@ -184,29 +194,22 @@ def open_project():
             text_widget.delete("1.0", END)
             text_widget.insert("1.0", program)
             file.close()
-
         projectpath = os.path.dirname(file_path)
         filename = file_path
         alreadySaved = True
-
-
 def print_to_console(output):
     console_text.configure(state="normal")
-    # Remove color codes from the output
     output = re.sub('\033\[\d+m', '', output)
-    # Clear the console_text widget
     console_text.delete('1.0', END)
-    # Insert the modified output into console_text
     console_text.insert(END, output)
-    # Scroll to the end of the text
     console_text.see(END)
     console_text.configure(state="disabled")
-
-
-    #code to start the project......
 keyboard.add_hotkey('ctrl+s', save_program)
 keyboard.add_hotkey('ctrl+o', open_project)
+#<<<<<----------gui section-------------->>>>>
 winroot = Tk()
+winroot.bind("<FocusIn>", on_focus)
+winroot.bind("<FocusOut>", on_blur)
 winroot.title("ArduinoPyBhutuu")
 winroot.geometry("800x600")
 winroot.minsize(500, 500)
@@ -215,7 +218,6 @@ getCahce()
 iconPhoto = PhotoImage(file='.arduinoIcon.png')
 winroot.iconphoto(False, iconPhoto)
 cleanCache()
-
 #<<---header frame--->>
 headFrame = Frame(winroot)
 openButton = Button(headFrame, text="Open", command=open_project).grid(row=0, column=0)
@@ -227,7 +229,6 @@ def onSelectPort(event):
     global port
     selected_port = dropdownForPort.get()
     port = selected_port
-
 selected_port = StringVar()
 selected_port.set("Select Port")
 allPorts = []
@@ -235,33 +236,12 @@ dropdownForPort = ttk.Combobox(headFrame, textvariable=selected_port)
 dropdownForPort['value'] = allPorts
 dropdownForPort.grid(row=0, column=3)
 dropdownForPort.bind("<<ComboboxSelected>>", onSelectPort)
-
 def update_ports():
     ports = serial.tools.list_ports.comports()
     all_ports = [port.device for port in ports]
     dropdownForPort['value'] = all_ports
     winroot.after(1000, update_ports)
-
 update_ports()
-# def onSelectPort(event):
-#     global port
-#     selected_port = dropdownForPort.get()
-#     port = selected_port
-# selected_port = StringVar()
-# selected_port.set("Select Port")
-# allPorts = []
-# dropdownForPort = ttk.Combobox(headFrame, textvariable=selected_port)
-
-
-# ports = serial.tools.list_ports.comports()
-# for port in ports:
-#         allPorts.append(port.device) 
-
-
-
-# dropdownForPort['value'] = allPorts
-# dropdownForPort.grid(row=0, column=3)
-# dropdownForPort.bind("<<ComboboxSelected>>", onSelectPort)
 #<<<---board selection--->>>
 def onSelectBoard(event):
     global boardName
@@ -281,10 +261,20 @@ winroot.columnconfigure(0, weight=1)
 if firstEdit is True:
     text_widget.insert("1.0", defaultWidget)
     firstEdit = False
+#<<--Autoclose brackets-->>
+def on_key_release(event):
+    opening_brackets = "{[("
+    closing_brackets = "}])"
+    if event.char and event.char in opening_brackets:
+        closing_bracket = get_closing_bracket(event.char, opening_brackets, closing_brackets)
+        text_widget.insert("insert", closing_bracket)
+def get_closing_bracket(opening_bracket, opening_brackets, closing_brackets):
+    index = opening_brackets.index(opening_bracket)
+    return closing_brackets[index]
+winroot.bind("<KeyRelease>", on_key_release)
 # Create a text widget for the console screen
 console_text = Text(winroot, height=8)
 console_text.grid(row=2, column=0, sticky="nsew")
 winroot.rowconfigure(2, weight=0)
-
 winroot.after(1000, update_ports)
 winroot.mainloop()
