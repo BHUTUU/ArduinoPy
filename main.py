@@ -1,7 +1,7 @@
 import serial.tools.list_ports
-import os, base64
+import os, base64, subprocess,re
 from tkinter import messagebox
-from tkinter.filedialog import asksaveasfilename
+from tkinter.filedialog import asksaveasfilename, askopenfilename
 from tkinter import *
 from tkinter import ttk
 import bhutuuImage as ImageRequired
@@ -95,11 +95,13 @@ def compile_program():
         if board:
             compile_command = f"arduino-cli compile --fqbn {board} {program_path}"
             print(compile_command)
-            returnValue = os.system(compile_command)
-            if returnValue == 0:
-                compiled = True
-            if silent == False:
-                messagebox.showinfo("Compilation", "Program compiled successfully.")
+            compiledOutput = subprocess.check_output(compile_command, shell=True, universal_newlines=True)
+            print_to_console(compiledOutput)
+            # returnValue = os.system(compile_command)
+            # if returnValue == 0:
+            #     compiled = True
+            # if silent == False:
+            #     messagebox.showinfo("Compilation", "Program compiled successfully.")
         else:
             messagebox.showerror("Invalid Board", "Select a valid board before compilation")
     else:
@@ -122,7 +124,8 @@ def upload_program():
         if board and port:
             upload_command = f"arduino-cli upload -p {port} --fqbn {board} {program_path}"
             print(upload_command)
-            os.system(upload_command)
+            uploaded_output=subprocess.check_output(upload_command,shell=True, universal_newlines=True)
+            print_to_console(uploaded_output)
             messagebox.showinfo("Upload", "Program uploaded successfully.")
         else:
             messagebox.showerror("Invalid Board or Port", "Select a valid board and port before upload")
@@ -169,9 +172,40 @@ def save_program():
                 filename = output_file_path
                 projectpath = project_directory
                 alreadySaved = True
+def open_project():
+    global projectpath
+    global filename
+    global alreadySaved
+
+    file_path = askopenfilename(filetypes=[("Arduino Program", "*.ino")])
+    if file_path:
+        with open(file_path, "r") as file:
+            program = file.read()
+            text_widget.delete("1.0", END)
+            text_widget.insert("1.0", program)
+            file.close()
+
+        projectpath = os.path.dirname(file_path)
+        filename = file_path
+        alreadySaved = True
+
+
+def print_to_console(output):
+    console_text.configure(state="normal")
+    # Remove color codes from the output
+    output = re.sub('\033\[\d+m', '', output)
+    # Clear the console_text widget
+    console_text.delete('1.0', END)
+    # Insert the modified output into console_text
+    console_text.insert(END, output)
+    # Scroll to the end of the text
+    console_text.see(END)
+    console_text.configure(state="disabled")
+
 
     #code to start the project......
 keyboard.add_hotkey('ctrl+s', save_program)
+keyboard.add_hotkey('ctrl+o', open_project)
 winroot = Tk()
 winroot.title("ArduinoPyBhutuu")
 winroot.geometry("800x600")
@@ -181,26 +215,53 @@ getCahce()
 iconPhoto = PhotoImage(file='.arduinoIcon.png')
 winroot.iconphoto(False, iconPhoto)
 cleanCache()
+
 #<<---header frame--->>
 headFrame = Frame(winroot)
-compileButton = Button(headFrame, text="Compile", command=compile_program).grid(row=0, column=0)
-uploadButton = Button(headFrame, text="Upload", command=upload_program).grid(row=0, column=1)
-saveButton = Button(headFrame, text="Save", command=save_program).grid(row=0, column=2)
+openButton = Button(headFrame, text="Open", command=open_project).grid(row=0, column=0)
+compileButton = Button(headFrame, text="Compile", command=compile_program).grid(row=0, column=1)
+uploadButton = Button(headFrame, text="Upload", command=upload_program).grid(row=0, column=2)
+saveButton = Button(headFrame, text="Save", command=save_program).grid(row=0, column=3)
 #<<--port selection-->>
 def onSelectPort(event):
     global port
     selected_port = dropdownForPort.get()
     port = selected_port
+
 selected_port = StringVar()
 selected_port.set("Select Port")
 allPorts = []
 dropdownForPort = ttk.Combobox(headFrame, textvariable=selected_port)
-ports = serial.tools.list_ports.comports()
-for port in ports:
-        allPorts.append(port.device) 
-dropdownForPort['value'] = tuple(allPorts)
+dropdownForPort['value'] = allPorts
 dropdownForPort.grid(row=0, column=3)
 dropdownForPort.bind("<<ComboboxSelected>>", onSelectPort)
+
+def update_ports():
+    ports = serial.tools.list_ports.comports()
+    all_ports = [port.device for port in ports]
+    dropdownForPort['value'] = all_ports
+    winroot.after(1000, update_ports)
+
+update_ports()
+# def onSelectPort(event):
+#     global port
+#     selected_port = dropdownForPort.get()
+#     port = selected_port
+# selected_port = StringVar()
+# selected_port.set("Select Port")
+# allPorts = []
+# dropdownForPort = ttk.Combobox(headFrame, textvariable=selected_port)
+
+
+# ports = serial.tools.list_ports.comports()
+# for port in ports:
+#         allPorts.append(port.device) 
+
+
+
+# dropdownForPort['value'] = allPorts
+# dropdownForPort.grid(row=0, column=3)
+# dropdownForPort.bind("<<ComboboxSelected>>", onSelectPort)
 #<<<---board selection--->>>
 def onSelectBoard(event):
     global boardName
@@ -220,4 +281,10 @@ winroot.columnconfigure(0, weight=1)
 if firstEdit is True:
     text_widget.insert("1.0", defaultWidget)
     firstEdit = False
+# Create a text widget for the console screen
+console_text = Text(winroot, height=8)
+console_text.grid(row=2, column=0, sticky="nsew")
+winroot.rowconfigure(2, weight=0)
+
+winroot.after(1000, update_ports)
 winroot.mainloop()
