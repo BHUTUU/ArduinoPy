@@ -167,9 +167,7 @@ def save_program():
                 project_directory = os.path.join(folder_path, folder_name)
                 save_command = f"arduino-cli sketch new {project_directory}"
                 os.system(save_command)
-                
                 output_file_path = os.path.join(project_directory, f"{folder_name}.ino")
-                
                 with open(output_file_path, "w") as file:
                     file.write(program)
                     file.close()
