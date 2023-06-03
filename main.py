@@ -85,6 +85,8 @@ def on_blur(event):
     global window_focused
     window_focused = False
 #...............Functions------------------->>>
+def openNewSession():
+    subprocess.Popen(['python', 'oppsmain.py'])
 def compile_program():
     global alreadySaved
     global projectpath
@@ -131,6 +133,12 @@ def upload_program():
             # messagebox.showinfo("Upload", "Program uploaded successfully.")
         else:
             messagebox.showerror("Invalid Board or Port", "Select a valid board and port before upload")
+def serialMonitor():
+    pass
+    # if self.port:
+    #     command = f"arduino-cli serial -p {self.port}"
+    #     def viewValues():
+    #         os.Popen(command)
 def save_program():
     global window_focused
     if window_focused:
@@ -218,10 +226,11 @@ winroot.iconphoto(False, iconPhoto)
 cleanCache()
 #<<---header frame--->>
 headFrame = Frame(winroot)
-openButton = Button(headFrame, text="Open", command=open_project).grid(row=0, column=0)
-compileButton = Button(headFrame, text="Compile", command=compile_program).grid(row=0, column=1)
-uploadButton = Button(headFrame, text="Upload", command=upload_program).grid(row=0, column=2)
-saveButton = Button(headFrame, text="Save", command=save_program).grid(row=0, column=3)
+newButton = Button(headFrame, text="New", command=openNewSession).grid(row=0, column=0)
+openButton = Button(headFrame, text="Open", command=open_project).grid(row=0, column=1)
+compileButton = Button(headFrame, text="Compile", command=compile_program).grid(row=0, column=2)
+uploadButton = Button(headFrame, text="Upload", command=upload_program).grid(row=0, column=3)
+saveButton = Button(headFrame, text="Save", command=save_program).grid(row=0, column=4)
 #<<--port selection-->>
 def onSelectPort(event):
     global port
@@ -232,7 +241,7 @@ selected_port.set("Select Port")
 allPorts = []
 dropdownForPort = ttk.Combobox(headFrame, textvariable=selected_port)
 dropdownForPort['value'] = allPorts
-dropdownForPort.grid(row=0, column=3)
+dropdownForPort.grid(row=0, column=5)
 dropdownForPort.bind("<<ComboboxSelected>>", onSelectPort)
 def update_ports():
     ports = serial.tools.list_ports.comports()
@@ -249,9 +258,11 @@ selected_board = StringVar()
 selected_board.set("Select Board Type")
 dropdownForBoard = ttk.Combobox(headFrame, textvariable=selected_board)
 dropdownForBoard['value'] = boardTypes
-dropdownForBoard.grid(row=0, column=4)
+dropdownForBoard.grid(row=0, column=6)
 dropdownForBoard.bind("<<ComboboxSelected>>", onSelectBoard)
+serialButton = Button(headFrame, text="Serial Monitor",command=serialMonitor).grid(row=0, column=7)
 headFrame.grid(row=0, column=0)
+#<<--Coding area--->>>
 text_widget = Text(winroot)
 text_widget.grid(row=1, column=0, sticky="nsew")
 winroot.rowconfigure(1, weight=1)

@@ -131,12 +131,12 @@ class ArduinoPyBhutuu:
                 # messagebox.showinfo("Upload", "Program uploaded successfully.")
             else:
                 messagebox.showerror("Invalid Board or Port", "Select a valid board and port before upload")
-    # def serialMonitor(self):
-    #     if self.port:
-    #         command = f"arduino-cli serial -p {self.port}"
-    #         def viewValues():
-    #             os.Popen(command)
-                
+    def serialMonitor(self):
+        pass
+        # if self.port:
+        #     command = f"arduino-cli serial -p {self.port}"
+        #     def viewValues():
+        #         os.Popen(command)
     def save_program(self):
         if self.window_focused:
             pass
@@ -250,7 +250,7 @@ class ArduinoPyBhutuu:
         dropdownForBoard['value'] = boardTypes
         dropdownForBoard.grid(row=0, column=6)
         dropdownForBoard.bind("<<ComboboxSelected>>", onSelectBoard)
-        serialButton = Button(headFrame, text="Serial Monitor").grid(row=0, column=7)
+        serialButton = Button(headFrame, text="Serial Monitor", command=self.serialMonitor).grid(row=0, column=7)
         headFrame.grid(row=0, column=0)
         #<<<----Coding area---->>>
         self.text_widget = Text(self.root)
