@@ -65,6 +65,8 @@ void loop() {
 
 }
 """
+def openNewSession():
+    subprocess.Popen(['python', 'oppsmain.py'])
 class ArduinoPyBhutuu:
     def __init__(self, root):
         self.root = root
@@ -96,13 +98,14 @@ class ArduinoPyBhutuu:
             if board:
                 compile_command = f"arduino-cli compile --fqbn {board} {program_path}"
                 print(compile_command)
-                compiledOutput = subprocess.check_output(compile_command, shell=True, universal_newlines=True)
-                self.print_to_console(compiledOutput)
-                # returnValue = os.system(compile_command)
-                # if returnValue == 0:
-                #     compiled = True
-                # if silent == False:
-                #     messagebox.showinfo("Compilation", "Program compiled successfully.")
+                try:
+                    compiledOutput = subprocess.check_output(compile_command, shell=True, universal_newlines=True)
+                    self.print_to_console(compiledOutput)
+                    self.compiled = True
+                except subprocess.CalledProcessError as e:
+                    compiledOutput = e.output
+                    self.print_to_console("compilation failed!")
+                    self.compiled = False
             else:
                 messagebox.showerror("Invalid Board", "Select a valid board before compilation")
         else:
@@ -118,11 +121,22 @@ class ArduinoPyBhutuu:
             if board and self.port:
                 upload_command = f"arduino-cli upload -p {self.port} --fqbn {board} {program_path}"
                 print(upload_command)
-                uploaded_output=subprocess.check_output(upload_command,shell=True, universal_newlines=True)
-                self.print_to_console(uploaded_output)
+                try:
+                    uploaded_output=subprocess.check_output(upload_command,shell=True, universal_newlines=True)
+                    self.print_to_console("Uploaded successfully")
+                except subprocess.CalledProcessError as e:
+                    uploaded_output = e.output
+                    self.print_to_console("Upload failed!")
+
                 # messagebox.showinfo("Upload", "Program uploaded successfully.")
             else:
                 messagebox.showerror("Invalid Board or Port", "Select a valid board and port before upload")
+    # def serialMonitor(self):
+    #     if self.port:
+    #         command = f"arduino-cli serial -p {self.port}"
+    #         def viewValues():
+    #             os.Popen(command)
+                
     def save_program(self):
         if self.window_focused:
             pass
@@ -163,6 +177,7 @@ class ArduinoPyBhutuu:
                     self.filename = output_file_path
                     self.projectpath = project_directory
                     self.alreadySaved = True
+
     def open_project(self):
         if self.window_focused:
             pass
@@ -185,7 +200,6 @@ class ArduinoPyBhutuu:
         self.console_text.insert(END, output)
         self.console_text.see(END)
         self.console_text.configure(state="disabled")
-
     def create_widget(self):
         keyboard.add_hotkey('ctrl+s', self.save_program)
         keyboard.add_hotkey('ctrl+o', self.open_project)
@@ -194,16 +208,22 @@ class ArduinoPyBhutuu:
         self.root.title("ArduinoPyBhutuu")
         self.root.geometry("800x600")
         self.root.minsize(500, 500)
+        #<<--icon setup-->>
+        getCahce()
+        iconPhoto = PhotoImage(file='.arduinoIcon.png')
+        self.root.iconphoto(False, iconPhoto)
+        cleanCache()
        # <<<---Header frame--->>>
         headFrame = Frame(self.root)
+        newButton = Button(headFrame, text="New", command=openNewSession).grid(row=0, column=0)
         openButton = Button(headFrame, text="Open", command=self.open_project)
-        openButton.grid(row=0, column=0)
+        openButton.grid(row=0, column=1)
         compileButton = Button(headFrame, text="Compile", command=self.compile_program)
-        compileButton.grid(row=0, column=1)
+        compileButton.grid(row=0, column=2)
         uploadButton = Button(headFrame, text="Upload", command=self.upload_program)
-        uploadButton.grid(row=0, column=2)
+        uploadButton.grid(row=0, column=3)
         saveButton = Button(headFrame, text="Save", command=self.save_program)
-        saveButton.grid(row=0, column=3)
+        saveButton.grid(row=0, column=4)
         # <<<---Port selection--->>>
         def onSelectPort(event):
             self.selected_port = dropdownForPort.get()
@@ -212,7 +232,7 @@ class ArduinoPyBhutuu:
         self.selected_port.set("Select Port")
         dropdownForPort = ttk.Combobox(headFrame, textvariable=self.selected_port)
         dropdownForPort['value'] = self.allPorts
-        dropdownForPort.grid(row=0, column=4)
+        dropdownForPort.grid(row=0, column=5)
         dropdownForPort.bind("<<ComboboxSelected>>", onSelectPort)
         def update_ports():
             ports = serial.tools.list_ports.comports()
@@ -228,9 +248,11 @@ class ArduinoPyBhutuu:
         self.selected_board.set("Select Board Type")
         dropdownForBoard = ttk.Combobox(headFrame, textvariable=self.selected_board)
         dropdownForBoard['value'] = boardTypes
-        dropdownForBoard.grid(row=0, column=5)
+        dropdownForBoard.grid(row=0, column=6)
         dropdownForBoard.bind("<<ComboboxSelected>>", onSelectBoard)
+        serialButton = Button(headFrame, text="Serial Monitor").grid(row=0, column=7)
         headFrame.grid(row=0, column=0)
+        #<<<----Coding area---->>>
         self.text_widget = Text(self.root)
         self.text_widget.grid(row=1, column=0, sticky="nsew")
         self.root.rowconfigure(1, weight=1)
