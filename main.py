@@ -1,5 +1,5 @@
 import serial.tools.list_ports
-import os, base64, subprocess,re
+import os, base64, subprocess,re, sys
 from tkinter import messagebox
 from tkinter.filedialog import asksaveasfilename, askopenfilename
 from tkinter import *
@@ -75,6 +75,7 @@ void loop() {
 
 }
 """
+
 window_focused = True
 # Function to handle window focus events
 def on_focus(event):
@@ -84,9 +85,12 @@ def on_focus(event):
 def on_blur(event):
     global window_focused
     window_focused = False
+calledFileDistance = sys.argv[0]
 #...............Functions------------------->>>
 def openNewSession():
-    subprocess.Popen(['python', 'oppsmain.py'])
+    # subprocess.Popen(['python', 'oppsmain.py'])
+    subprocess.Popen(['python', calledFileDistance])
+
 def compile_program():
     global alreadySaved
     global projectpath
