@@ -1,5 +1,5 @@
 import serial.tools.list_ports
-import os, base64, subprocess,re
+import os, base64, subprocess,re, sys
 from tkinter import messagebox
 from tkinter.filedialog import asksaveasfilename, askopenfilename
 from tkinter import *
@@ -7,6 +7,7 @@ from tkinter import ttk
 import bhutuuImage as ImageRequired
 import threading, keyboard
 #<<<---cahce management--->>>
+
 def cleanCache():
     for i in ['.bhutuuIcon.png', '.arduinoIcon.png', '.arduinoImage.png']:
         if os.path.exists(i):
@@ -65,8 +66,19 @@ void loop() {
 
 }
 """
+#<<<----Check is this is program is running after compiling or not------>>>
+with open(sys.argv[0], 'rb') as fileCheckFormat:
+    contentOfFileFormat = fileCheckFormat.read()
+    try:
+        contentOfFileFormat.decode('utf-8')
+        compiledFile = False
+    except UnicodeDecodeError:
+        compiledFile = True
 def openNewSession():
-    subprocess.Popen(['python', 'oppsmain.py'])
+    if compiledFile is True:
+        subprocess.Popen(sys.argv[0]) #This option will work after compilation!
+    else:
+        subprocess.Popen(['python', sys.argv[0]])
 class ArduinoPyBhutuu:
     def __init__(self, root):
         self.root = root
@@ -109,7 +121,7 @@ class ArduinoPyBhutuu:
             else:
                 messagebox.showerror("Invalid Board", "Select a valid board before compilation")
         else:
-            messagebox.showerror("Compilation Failed", "Need to savet the program before compilation.")
+            messagebox.showerror("Compilation Failed", "Need to save the program before compilation.")
     def upload_program(self):
         self.compiled = False
         self.silent = True
