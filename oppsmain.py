@@ -79,7 +79,7 @@ def openNewSession():
         subprocess.Popen(sys.argv[0]) #This option will work after compilation!
     else:
         subprocess.Popen(['python', sys.argv[0]])
-class ArduinoPyBhutuu:
+class ArduinoPy:
     def __init__(self, root):
         self.root = root
     filename = None
@@ -217,7 +217,7 @@ class ArduinoPyBhutuu:
         keyboard.add_hotkey('ctrl+o', self.open_project)
         self.root.bind("<FocusIn>", self.on_focus)
         self.root.bind("<FocusOut>", self.on_blur)
-        self.root.title("ArduinoPyBhutuu")
+        self.root.title("ArduinoPy")
         self.root.geometry("800x600")
         self.root.minsize(500, 500)
         #<<--icon setup-->>
@@ -290,6 +290,6 @@ class ArduinoPyBhutuu:
         self.root.after(1000, update_ports)
 if __name__ == "__main__":
     root = Tk()
-    myObj = ArduinoPyBhutuu(root)
+    myObj = ArduinoPy(root)
     myObj.create_widget()
     root.mainloop()
